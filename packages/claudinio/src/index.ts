@@ -37,7 +37,7 @@ process.on("uncaughtException", (e) => {
 })
 
 const cli = yargs(hideBin(process.argv))
-  .scriptName("opencode")
+  .scriptName("claudinio")
   .help("help", "show help")
   .alias("help", "h")
   .version("version", "show version number", Installation.VERSION)
@@ -63,12 +63,40 @@ const cli = yargs(hideBin(process.argv))
     })
 
     process.env.AGENT = "1"
-    process.env.OPENCODE = "1"
+    process.env.CLAUDINIO = "1"
 
-    Log.Default.info("opencode", {
+    Log.Default.info("claudinio", {
       version: Installation.VERSION,
       args: process.argv.slice(2),
     })
+  })
+  .middleware(async () => {
+    // Check if API key exists (skip for auth, help, and version commands)
+    const args = process.argv.slice(2)
+    const skipCommands = ["auth", "help", "--help", "-h", "version", "--version", "-v"]
+    const shouldCheckKey = !skipCommands.some(cmd => args.includes(cmd))
+
+    if (shouldCheckKey) {
+      const { Auth } = await import("./auth")
+      const hasKey = await (async () => {
+        if (process.env["CLAUDINIO_API_KEY"]) return true
+        if (await Auth.get("claudinio")) return true
+        return false
+      })()
+
+      if (!hasKey) {
+        console.error("Error: CLAUDINIO_API_KEY not found!")
+        console.error("")
+        console.error("Claudin.io requires an API key to work.")
+        console.error("Please set your API key using one of these methods:")
+        console.error("")
+        console.error("1. Run: claudinio auth login")
+        console.error("2. Set environment variable: export CLAUDINIO_API_KEY=your-key-here")
+        console.error("")
+        console.error("Get your API key at: https://claudin.io")
+        process.exit(1)
+      }
+    }
   })
   .usage("\n" + UI.logo())
   .command(AcpCommand)

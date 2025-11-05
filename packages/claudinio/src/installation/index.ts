@@ -6,8 +6,8 @@ import { Bus } from "../bus"
 import { Log } from "../util/log"
 
 declare global {
-  const OPENCODE_VERSION: string
-  const OPENCODE_CHANNEL: string
+  const CLAUDINIO_VERSION: string
+  const CLAUDINIO_CHANNEL: string
 }
 
 export namespace Installation {
@@ -50,7 +50,7 @@ export namespace Installation {
   }
 
   export async function method() {
-    if (process.execPath.includes(path.join(".opencode", "bin"))) return "curl"
+    if (process.execPath.includes(path.join(".claudinio", "bin"))) return "curl"
     if (process.execPath.includes(path.join(".local", "bin"))) return "curl"
     const exec = process.execPath.toLowerCase()
 
@@ -73,7 +73,7 @@ export namespace Installation {
       },
       {
         name: "brew" as const,
-        command: () => $`brew list --formula opencode`.throws(false).text(),
+        command: () => $`brew list --formula claudinio`.throws(false).text(),
       },
     ]
 
@@ -87,7 +87,7 @@ export namespace Installation {
 
     for (const check of checks) {
       const output = await check.command()
-      if (output.includes(check.name === "brew" ? "opencode" : "opencode-ai")) {
+      if (output.includes(check.name === "brew" ? "claudinio" : "claudiniocode")) {
         return check.name
       }
     }
@@ -103,30 +103,30 @@ export namespace Installation {
   )
 
   async function getBrewFormula() {
-    const tapFormula = await $`brew list --formula sst/tap/opencode`.throws(false).text()
-    if (tapFormula.includes("opencode")) return "sst/tap/opencode"
-    const coreFormula = await $`brew list --formula opencode`.throws(false).text()
-    if (coreFormula.includes("opencode")) return "opencode"
-    return "opencode"
+    const tapFormula = await $`brew list --formula Tavernari/tap/claudinio`.throws(false).text()
+    if (tapFormula.includes("claudinio")) return "Tavernari/tap/claudinio"
+    const coreFormula = await $`brew list --formula claudinio`.throws(false).text()
+    if (coreFormula.includes("claudinio")) return "claudinio"
+    return "claudinio"
   }
 
   export async function upgrade(method: Method, target: string) {
     let cmd
     switch (method) {
       case "curl":
-        cmd = $`curl -fsSL https://opencode.ai/install | bash`.env({
+        cmd = $`curl -fsSL https://claudin.io/install | bash`.env({
           ...process.env,
           VERSION: target,
         })
         break
       case "npm":
-        cmd = $`npm install -g opencode-ai@${target}`
+        cmd = $`npm install -g claudiniocode@${target}`
         break
       case "pnpm":
-        cmd = $`pnpm install -g opencode-ai@${target}`
+        cmd = $`pnpm install -g claudiniocode@${target}`
         break
       case "bun":
-        cmd = $`bun install -g opencode-ai@${target}`
+        cmd = $`bun install -g claudiniocode@${target}`
         break
       case "brew": {
         const formula = await getBrewFormula()
@@ -151,14 +151,14 @@ export namespace Installation {
       })
   }
 
-  export const VERSION = typeof OPENCODE_VERSION === "string" ? OPENCODE_VERSION : "local"
-  export const CHANNEL = typeof OPENCODE_CHANNEL === "string" ? OPENCODE_CHANNEL : "local"
-  export const USER_AGENT = `opencode/${CHANNEL}/${VERSION}`
+  export const VERSION = typeof CLAUDINIO_VERSION === "string" ? CLAUDINIO_VERSION : "local"
+  export const CHANNEL = typeof CLAUDINIO_CHANNEL === "string" ? CLAUDINIO_CHANNEL : "local"
+  export const USER_AGENT = `claudinio/${CHANNEL}/${VERSION}`
 
   export async function latest() {
     const [major] = VERSION.split(".").map((x) => Number(x))
     const channel = CHANNEL === "latest" ? `latest-${major}` : CHANNEL
-    return fetch(`https://registry.npmjs.org/opencode-ai/${channel}`)
+    return fetch(`https://registry.npmjs.org/claudiniocode/${channel}`)
       .then((res) => {
         if (!res.ok) throw new Error(res.statusText)
         return res.json()
